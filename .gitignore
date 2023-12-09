@@ -30,3 +30,12 @@
 *.exe
 *.out
 *.app
+
+# local ignores
+.DS_Store
+.idea
+*.log
+tmp/
+.vscode/
+build/
+*.o
