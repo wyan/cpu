@@ -1,2 +1,3 @@
 all:
-	g++ -std=c++20 -o cpu src/*.cc
+	mkdir -p build
+	g++ -std=c++20 -o build/cpu src/*.cc
