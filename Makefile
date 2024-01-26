@@ -1,3 +1,6 @@
 all:
 	mkdir -p build
-	g++ -std=c++20 -o build/cpu src/*.cc
+	g++ -g -std=c++20 -o build/cpu src/*.cc
+
+clean:
+	rm -rf build

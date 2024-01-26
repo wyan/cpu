@@ -24,7 +24,7 @@
 class CPU {
 
     const uint16_t mem_size; // size of system memory
-    uint8_t *MEM;            // system memory
+    uint16_t *MEM;        // system memory
 
     uint16_t PC;          // Program Counter
     uint16_t FLAGS;       // CPU flags register
@@ -38,7 +38,7 @@ class CPU {
 
 public:
 
-    CPU(const uint16_t mem_size) : mem_size(mem_size) { MEM = new uint8_t[mem_size]; }
+    CPU(const uint16_t mem_size) : mem_size(mem_size) { MEM = new uint16_t[mem_size]; }
     ~CPU() { delete MEM; }
 
     // initialization
@@ -54,7 +54,7 @@ public:
     uint16_t flags() const { return FLAGS; }
     bool halted() const { return (FLAGS & FLAGS_HALT); }
 
-    void loadmem(uint8_t *buffer, const uint16_t size, const uint16_t start);
+    void loadmem(uint16_t *buffer, const uint16_t size, const uint16_t start);
     void dump() const;
 
 };

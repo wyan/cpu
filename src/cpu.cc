@@ -10,9 +10,9 @@ void CPU::reset() {
     return;
 }
 
-void CPU::loadmem(uint8_t *buffer, const uint16_t size, const uint16_t start) {
+void CPU::loadmem(uint16_t *buffer, const uint16_t size, const uint16_t start) {
     const uint16_t size_norm = (size > mem_size - start) ? mem_size - start : size;
-    memcpy((MEM + start), buffer, size);
+    memcpy((MEM + start), buffer, size_norm);
 }
 
 void CPU::dump() const {
@@ -30,8 +30,7 @@ void CPU::run_once() {
     uint16_t initial_pc = PC;
 
     // Fetch instruction & increment PC
-    IR = (MEM[PC++] << 8) & 0xFFFF;
-    IR |= MEM[PC++] & 0xFF;
+    IR = MEM[PC++];
 
     // Decode instruction into opcode and parameters
     uint16_t opcode = (IR & OPCODE_MASK) >> 8;

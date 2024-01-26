@@ -10,7 +10,7 @@ int main(int argc, char *argv[])
 
     // Passing a parameter with a RAM image to run
     if(argc > 1) {
-        uint8_t *buffer = (uint8_t *)malloc(MEM_SIZE);
+        uint16_t *buffer = new uint16_t[MEM_SIZE];
 
         std::string filename { argv[1] };
         std::ifstream fin(filename, std::ios::in | std::ios::binary );
@@ -26,12 +26,12 @@ int main(int argc, char *argv[])
         cpu.dump();
 
         fin.close();
-        free(buffer);
+        delete[] buffer;
     }
     else {
         // DEBUG: memory image
         uint16_t buffer[] = { 0xffff, 0xf800, 0x00a3, 0xff42, 0xf0ff, 0x0000 };
-        cpu.loadmem((uint8_t *)buffer, sizeof(buffer), 0x100);
+        cpu.loadmem(buffer, sizeof(buffer), 0x100);
     }
 
     cpu.reset();
