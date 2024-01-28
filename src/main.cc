@@ -30,7 +30,16 @@ int main(int argc, char *argv[])
     }
     else {
         // DEBUG: memory image
-        uint16_t buffer[] = { 0xffff, 0xf800, 0x00a3, 0xff42, 0xf0ff, 0x0000 };
+        uint16_t buffer[] = {
+            0xffff,    // NOP
+            0x00a3,    // LOAD r10, (r3)
+            0x0142,    // LOAD r4, #2
+            0x0153,    // LOAD r5, #3
+            0x2054,    // ADD r4, r5
+            0xf800,    // HALT
+            0xf0ff,
+            0x0000
+        };
         cpu.loadmem(buffer, sizeof(buffer), 0x100);
     }
 
@@ -38,6 +47,7 @@ int main(int argc, char *argv[])
 
     while(1) {
         cpu.run_once();
+        cpu.register_dump();
 
         if(cpu.halted())
             break;

@@ -1,5 +1,7 @@
 # Building a CPU with custom ISA and emulator
 
+At any point in time, this file might be completely out of date, sadly.
+
 ## Architecture
 
 * 16 bit instructions
@@ -25,57 +27,35 @@
 
 ## Memory model
 
-* Relative addressing is 12-bit (4 kB pages)
-* `JMP` can only branch to a 12 bit address (within the 4 kB page)
-* How do we branch to a different 4 kB page?
+For now, flat 16-bit address space.
 
 # Instruction Set
 
 ## Instruction structure
 
 ```
-15          12       8 7                0
-+-----------+----------+----------------+
-|  opcode1  |          |                |
-+-----------+----------+----------------+
+15               8 7                0
++-----------------+----------------+
+|    opcode       |     param      |
++-----------------+----------------+
 ```
 
-```
- -----------+------------------------------
-   opcode1  |  value
- -----------+------------------------------
-     000    |  Branching
-     001    |  Logical operations
-     010    |  Load/Store operations
-     011    |  Arithmetical operations
-     100    |  Flow
-     101    |  
-     110    |  
-     111    |  
-```
-## `100 flow`
+## Addressing modes
 
-```
-15      12       8 7                0
-+-------+-----------+----------------+
-|  100  |  opcode2  |                |
-+-------+-----------+----------------+
-```
-with `opcode2` one of the following:
-```
- -----------+------------------------------
-   opcode2  |  value
- -----------+------------------------------
-            |  Comparison to zero
-            |  Comparison to negative
-            |  Set branch condition to zero
-            |  Set branch condition to negative
-            |  
-```
-
-
+Register direct, register indirect, some sort of indexed addressing.
+Basic immediate addressing.
 
 ## Instructions required
+
+### Load / Store
+
+*    LOAD to register from register
+*    LOAD to register from register indirect
+*    LOAD to register from immediate 4-bit
+*    STORE to memory   immediate, direct, indirect
+*    LOAD  indexed from memory to register
+*    STORE indexed
+
 
 ### Flow control
 
@@ -92,15 +72,6 @@ with `opcode2` one of the following:
 ### Arithmetic
 
 *    ADD / SUB with and without carry
-
-### Load / Store
-
-*    LOAD from memory   to register
-*    LOAD from register to register
-*    STORE to memory   immediate, direct, indirect
-*    STORE to register immediate, direct, indirect
-*    LOAD  indexed from memory to register
-*    STORE indexed
 
 
 ## Opcodes

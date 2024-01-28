@@ -29,7 +29,6 @@ class CPU {
     uint16_t PC;          // Program Counter
     uint16_t FLAGS;       // CPU flags register
     uint16_t REG[16];     // 16 general purpose registers r0...r15
-    uint16_t ADD[16];     // 16 address registers a0...a15
     uint16_t SP, SPX;     // stack pointer and shadow stack pointer
 
     uint16_t IR;          // internal instruction register
@@ -56,7 +55,7 @@ public:
 
     void loadmem(uint16_t *buffer, const uint16_t size, const uint16_t start);
     void dump() const;
-
+    void register_dump() const;
 };
 
 
