@@ -52,9 +52,10 @@ Basic immediate addressing.
 *    LOAD to register from register
 *    LOAD to register from register indirect
 *    LOAD to register from immediate 4-bit
-*    STORE to memory   immediate, direct, indirect
-*    LOAD  indexed from memory to register
-*    STORE indexed
+*    LOAD to register from register indirect plus index
+*    STORE to memory from register
+*    STORE to memory from immediate 4-bit
+*    STORE to memory from register indirect plus index
 
 
 ### Flow control

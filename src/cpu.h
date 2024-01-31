@@ -52,10 +52,15 @@ public:
     // getters & setters
     uint16_t flags() const { return FLAGS; }
     bool halted() const { return (FLAGS & FLAGS_HALT); }
+    bool carry() const { return (FLAGS & FLAGS_CARRY); }
 
-    void loadmem(uint16_t *buffer, const uint16_t size, const uint16_t start);
+    void loadmem(const uint16_t *buffer, const uint16_t size, const uint16_t start);
     void dump() const;
     void register_dump() const;
+
+    void update_flags(uint32_t val);
+    void update_flags_arithmetic(uint32_t val, uint16_t op1, uint16_t op2);
+
 };
 
 
