@@ -10,19 +10,18 @@ At any point in time, this file might be completely out of date, sadly.
 ## CPU flags register
 
 ```
-   15     ...      8     7    ...    4   3   2   1   0
-+-----+---------+-----+----+-------+---+---+---+---+---+
-| INT |   ...   | HLT | BC |  ...  | C | O | N | E | Z |
-+-----+---------+-----+----+-------+---+---+---+---+---+
+   15     ...      8     7      ...      3   2   1   0
++-----+---------+-----+----+-----------+---+---+---+---+
+| INT |   ...   | HLT | BC |    ...    | C | O | N | Z |
++-----+---------+-----+----+-----------+---+---+---+---+
 ```
 
 * `INT` : Interrupt flag, SET when handling an interrupt
 * `HLT` : CPU is halted
-* `BC` : Skip next branch if set
+* `BC` : Skip next branch if set (possibly to be removed)
 * `C` : Carry bit from last operation
 * `O` : Last operation caused an overflow
 * `N` : Last operation's result was negative
-* `E` : Last comparison yielded equality
 * `Z` : Last operation's result was zero
 
 ## Memory model
@@ -61,7 +60,9 @@ Basic immediate addressing.
 ### Flow control
 
 *    `JMP` (unconditional jump)
-*    Branch if...
+    * absolute and relative
+    * immediate and register
+*    Conditional jump (branch)
 *    Interrupt
 *    Halt
 
