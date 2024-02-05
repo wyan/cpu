@@ -1,5 +1,6 @@
 #include <iostream>
 #include <iomanip>
+#include <bitset>
 #include "cpu.h"
 
 void CPU::reset() {
@@ -17,26 +18,31 @@ void CPU::loadmem(const uint16_t *buffer, const uint16_t size, const uint16_t st
     memcpy((MEM + start), buffer, size_norm);
 }
 
-void CPU::dump() const {
+void CPU::dump_memory() const {
     std::cout << std::right << std::setbase(16) << std::noshowbase << std::setfill('0');
     for(int i = 0; i < mem_size; i++) {
         if(i % 16 == 0) std::cout << std::setw(4) << i << " : ";
-        // std::cout << std::setw(2) << (static_cast<uint16_t>(MEM[i]) & 0xFF) << " ";
         std::cout << std::setw(4) << MEM[i] << " ";
         if(i % 16 == 15) std::cout << std::endl;
     }
     std::cout << std::endl;
 }
 
-void CPU::register_dump() const {
+void CPU::dump_registers() const {
     for(int i = 0; i < 16; i++) {
-        std::cout << "r"
-                  << std::setbase(10) << std::noshowbase << std::setfill(' ') << std::setw(2) << std::left
+        std::cout << "R"
+                  << std::setbase(10) << std::noshowbase << std::setfill('0') << std::setw(2)
                   << i << "="
                   << std::right << std::setbase(16) << std::noshowbase << std::setfill('0') << std::setw(4)
                   << REG[i] << " ";
         if(i % 4 == 3) std::cout << std::endl;
     }
+}
+
+void CPU::dump_flags() const {
+    std::bitset<16> flag_bitfield(flags());
+    std::cout << "       I......HB..CONEZ" << std::endl;
+    std::cout << "FLAGS: " << flag_bitfield << std::endl;
 }
 
 void CPU::update_flags(uint32_t val) {
@@ -68,6 +74,61 @@ void CPU::update_flags_arithmetic(uint32_t val, uint16_t op1, uint16_t op2) {
     }
 }
 
+std::string CPU::condition_to_letters(uint16_t condition) const {
+    // We only compare the relevant 4-bits
+    switch(condition & 0x000F) {
+        case 0b0000:            // No condition
+            return std::string("");
+            break;
+        case 0b0001:            // Equality / zero
+            return std::string(".EQ");
+            break;
+        case 0b0010:            // Below (unsigned)
+            return std::string(".B");
+            break;
+        case 0b0011:            // Below or equal
+            return std::string(".BE");
+            break;
+        case 0b0100:            // Less (signed)
+            return std::string(".L");
+            break;
+        case 0b0101:            // Less or equal
+            return std::string(".LE");
+            break;
+        case 0b0110:            // Negative
+            return std::string(".N");
+            break;
+        case 0b0111:            // Overflow
+            return std::string(".O");
+            break;
+        case 0b1001:            // Not equal
+            return std::string(".NEQ");
+            break;
+        case 0b1010:            // Above or equal
+            return std::string(".AE");
+            break;
+        case 0b1011:            // Above
+            return std::string(".A");
+            break;
+        case 0b1100:            // Greater than
+            return std::string(".G");
+            break;
+        case 0b1101:            // Greater or equal
+            return std::string(".GE");
+            break;
+        case 0b1110:            // Not negative (positive)
+            return std::string(".P");
+            break;
+        case 0b1111:            // Not overflow
+            return std::string(".NO");
+            break;
+        default:                // Undefined
+            return std::string("UNDEFINED");
+            break;
+    }
+}
+
+
 void CPU::run_once() {
     // Keep initial PC for logging purposes
     uint16_t initial_pc = PC;
@@ -83,10 +144,10 @@ void CPU::run_once() {
               << std::setw(4) << initial_pc << " : "              
               << std::setw(4) << IR << "   "
               << "opcode=" << std::setw(2) << opcode << "   "
-              << "params=" << std::setw(2) << params << std::endl;
+              << "params=" << std::setw(2) << params << "   ";
 
     // Execute
-    std::cout << "Running : ";
+    // std::cout << "Running : ";
     if(opcode == 0xFF)          // NOP
     {
         std::cout << "NOP" << std::endl;
@@ -115,7 +176,7 @@ void CPU::run_once() {
         uint16_t val = REG[reg] = imm;
         update_flags(val);
 
-        std::cout << std::setbase(10) << "LOAD r" << reg << ", " << imm << std::endl;
+        std::cout << std::setbase(10) << "LOAD r" << reg << ", #" << imm << std::endl;
     }
     else if(opcode == 0x02)     // LOAD register REG[param_high] <- REG[param_low]
     {
@@ -135,7 +196,7 @@ void CPU::run_once() {
         uint16_t val = REG[reg] = imm;
         update_flags(val);
 
-        std::cout << std::setbase(10) << "LOAD r" << reg << ", #" << imm << std::endl;
+        std::cout << std::setbase(10) << "LOAD r" << reg << ", #$" << std::setbase(16) << imm << std::endl;
     }
     else if(opcode == 0x10)     // STORE indirect (REG[param_high]) <- REG[param_low]
     {
@@ -157,10 +218,10 @@ void CPU::run_once() {
 
         std::cout << std::setbase(10) << "STORE (r" << add << "), " << imm << std::endl;
     }
-    else if(opcode == 0x20)     // ADD REG[param_low] <- REG[param_low] + REG[param_high]
+    else if(opcode == 0x20)     // ADD REG[param_high] <- REG[param_high] + REG[param_low]
     {
-        uint16_t acc = (params & 0x000F);
-        uint16_t reg = (params >> 4) & 0x000F;
+        uint16_t reg = (params & 0x000F);
+        uint16_t acc = (params >> 4) & 0x000F;
 
         uint16_t op1 = REG[acc];
         uint16_t op2 = REG[reg];
@@ -171,10 +232,10 @@ void CPU::run_once() {
 
         std::cout << std::setbase(10) << "ADD r" << acc << ", r" << reg << std::endl;
     }
-    else if(opcode == 0x21)     // ADC REG[param_low] <- REG[param_low] + REG[param_high]
+    else if(opcode == 0x21)     // ADC REG[param_high] <- REG[param_high] + REG[param_low]
     {
-        uint16_t acc = (params & 0x000F);
-        uint16_t reg = (params >> 4) & 0x000F;
+        uint16_t reg = (params & 0x000F);
+        uint16_t acc = (params >> 4) & 0x000F;
 
         if(carry()) ++REG[acc];
 
@@ -188,7 +249,7 @@ void CPU::run_once() {
 
         std::cout << std::setbase(10) << "ADD r" << acc << ", r" << reg << std::endl;
     }
-    else if(opcode == 0x30)      // NOT REG[param_low]
+    else if(opcode == 0x30)     // NOT REG[param_low]
     {
         uint16_t reg = (params & 0x000F);
 
@@ -197,6 +258,90 @@ void CPU::run_once() {
         update_flags(val);
 
         std::cout << std::setbase(10) << "NOT r" << reg << std::endl;
+    }
+    else if(opcode == 0x31)     // AND REG[param_high] <- REG[param_low]
+    {
+        uint16_t reg = (params & 0x000F);
+        uint16_t acc = (params >> 4) & 0x000F;
+
+        uint32_t val = REG[acc] &= REG[reg];
+
+        update_flags(val);
+
+        std::cout << std::setbase(10) << "AND r" << acc << ", r" << reg << std::endl;
+    }
+    else if(opcode == 0x32)     // OR REG[param_high] <- REG[param_low]
+    {
+        uint16_t reg = (params & 0x000F);
+        uint16_t acc = (params >> 4) & 0x000F;
+
+        uint32_t val = REG[acc] |= REG[reg];
+
+        update_flags(val);
+
+        std::cout << std::setbase(10) << "OR r" << acc << ", r" << reg << std::endl;
+    }
+    else if(opcode == 0x33)     // XOR REG[param_high] <- REG[param_low]
+    {
+        uint16_t reg = (params & 0x000F);
+        uint16_t acc = (params >> 4) & 0x000F;
+
+        uint32_t val = REG[acc] ^= REG[reg];
+
+        update_flags(val);
+
+        std::cout << std::setbase(10) << "XOR r" << acc << ", r" << reg << std::endl;
+    }
+    else if(opcode == 0x40)     // CMP REG[param_high], REG[param_low]
+    {
+        uint16_t reg = (params & 0x000F);
+        uint16_t acc = (params >> 4) & 0x000F;
+
+        uint32_t val = (REG[acc] - REG[reg]);
+
+        update_flags(val);
+        update_flags_arithmetic(val, REG[acc], REG[reg]);
+
+        std::cout << std::setbase(10) << "CMP r" << acc << ", r" << reg << std::endl;
+    }
+    else if(opcode == 0x41)     // CMP REG[param_high], imm4[param_low]
+    {
+        uint16_t imm = (params & 0x000F);
+        uint16_t acc = (params >> 4) & 0x000F;
+
+        uint32_t val = (REG[acc] - imm);
+
+        update_flags(val);
+        update_flags_arithmetic(val, REG[acc], imm);
+
+        std::cout << std::setbase(10) << "CMP r" << acc << ", " << imm << std::endl;
+    }
+    else if(opcode == 0x42)     // CMP immediate REG[param_high], imm16
+    {
+        uint16_t acc = (params >> 4) & 0x000F;
+        uint16_t imm = MEM[PC++];
+
+        uint32_t val = (REG[acc] - imm);
+
+        update_flags(val);
+        update_flags_arithmetic(val, REG[acc], imm);
+
+        std::cout << std::setbase(10) << "CMP r" << acc << ", #$" << std::setbase(16) << imm << std::endl;
+    }
+    else if(opcode == 0x50)     // JMPR rel [signed param]
+    {
+        int16_t rel = (int16_t)params;
+
+        PC += rel;              // JMPR 0 is a nop
+        std::cout << "JMPR #$" << std::setbase(16) << rel << std::endl;
+    }
+    else if(opcode == 0x51)     // JMP abs imm16
+    {
+        uint16_t abs = MEM[PC++];
+        PC = abs;
+
+        std::cout << "JMP" << condition_to_letters(params)
+                  << " #$" <<  std::setbase(16) << abs << std::endl;
     }
     else                        // Illegal opcode: halt CPU for now, maybe add trapping later
     {

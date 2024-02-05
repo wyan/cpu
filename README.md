@@ -65,6 +65,42 @@ Basic immediate addressing.
 *    Interrupt
 *    Halt
 
+#### Conditional jumps
+
+ * Equal / Zero (Z=1)
+ * Not equal / not zero (Z=0)
+ * Below / Carry (C=1)
+ * Below or equal (C=1 || Z=1)
+ * Above (C=0 && Z=0)
+ * Above or equal / Not carry (C=0)
+ * Less (N != O)
+ * Less or equal ((N != O) || Z=1)
+ * Greater ((N == O) && Z=0)
+ * Greater or equal ((N == O) || Z=1)
+ * Overflow (O=1)
+ * Not overflow (O=0)
+ * Negative (N=1)
+ * Not negative (N=0)
+
+0000  No condition
+0001  EQ
+0010  B
+0011  BE
+0100  L
+0101  LE
+0110  N
+0111  O
+
+1000  ---
+1001  NEQ
+1010  AE
+1011  A
+1100  G
+1101  GE
+1110  NN
+1111  NO
+
+
 ### Logic
 
 *    AND / OR / NOT / XOR

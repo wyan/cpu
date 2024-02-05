@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <cstring>
+#include <string>
 
 // CPU flags
 
@@ -14,6 +15,8 @@
 #define FLAGS_NEG      (1u <<  2)    //  - last operation's result is < 0
 #define FLAGS_EQ       (1u <<  1)    //  - comparison yielded an equality
 #define FLAGS_ZERO     (1u <<  0)    //  - last operation was zero
+
+#define FLAGS_COND     (FLAGS_ZERO | FLAGS_EQ | FLAGS_NEG | FLAGS_OVERFLOW | FLAGS_CARRY)
 
 // Opcode mask
 #define OPCODE_MASK    (0xFF00)
@@ -53,10 +56,14 @@ public:
     uint16_t flags() const { return FLAGS; }
     bool halted() const { return (FLAGS & FLAGS_HALT); }
     bool carry() const { return (FLAGS & FLAGS_CARRY); }
+    bool zero() const { return (FLAGS & FLAGS_ZERO); }
 
     void loadmem(const uint16_t *buffer, const uint16_t size, const uint16_t start);
-    void dump() const;
-    void register_dump() const;
+    void dump_memory() const;
+    void dump_registers() const;
+    void dump_flags() const;
+
+    std::string condition_to_letters(uint16_t) const;
 
     void update_flags(uint32_t val);
     void update_flags_arithmetic(uint32_t val, uint16_t op1, uint16_t op2);
