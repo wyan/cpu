@@ -102,14 +102,15 @@ Basic immediate addressing.
 1111  NO
 
 
-### Logic
-
-*    AND / OR / NOT / XOR
-*    Comparisons
-
-### Arithmetic
+### Arithmetic / Logic
 
 *    ADD / SUB with and without carry
+*    AND / OR / NOT / XOR register and immediate
+*    Shift left / right, signed / unsigned
+*    Rotate left / right, signed / unsigned
+*    Comparisons
+
+
 
 
 ## Opcodes
