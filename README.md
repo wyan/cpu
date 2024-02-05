@@ -2,12 +2,13 @@
 
 At any point in time, this file might be completely out of date, sadly.
 
-## Architecture
+## Overview
+### Architecture
 
 * 16 bit instructions
 * 16 bit registers
 
-## CPU flags register
+### CPU flags register
 
 ```
    15     ...      8     7      ...      3   2   1   0
@@ -24,13 +25,13 @@ At any point in time, this file might be completely out of date, sadly.
 * `N` : Last operation's result was negative
 * `Z` : Last operation's result was zero
 
-## Memory model
+### Memory model
 
 For now, flat 16-bit address space.
 
-# Instruction Set
+## Instruction Set
 
-## Instruction structure
+### Instruction structure
 
 ```
 15               8 7                0
@@ -39,14 +40,14 @@ For now, flat 16-bit address space.
 +-----------------+----------------+
 ```
 
-## Addressing modes
+### Addressing modes
 
 Register direct, register indirect, some sort of indexed addressing.
 Basic immediate addressing.
 
-## Instructions required
+### Instructions required
 
-### Load / Store
+#### Load / Store
 
 *    LOAD to register from register
 *    LOAD to register from register indirect
@@ -57,7 +58,7 @@ Basic immediate addressing.
 *    STORE to memory from register indirect plus index
 
 
-### Flow control
+#### Flow control
 
 *    `JMP` (unconditional jump)
     * absolute and relative
@@ -66,7 +67,7 @@ Basic immediate addressing.
 *    Interrupt
 *    Halt
 
-#### Conditional jumps
+##### Conditional jumps
 
  * Equal / Zero (Z=1)
  * Not equal / not zero (Z=0)
@@ -102,7 +103,7 @@ Basic immediate addressing.
 1111  NO
 
 
-### Arithmetic / Logic
+#### Arithmetic / Logic
 
 *    ADD / SUB with and without carry
 *    AND / OR / NOT / XOR register and immediate
@@ -134,6 +135,6 @@ Basic immediate addressing.
   Fx  :  _halt, _halt, _halt, _halt, _halt, _halt, _halt, _halt, _halt, _halt, _halt, _halt, _halt, _halt, _halt, _halt
 ```
 
-# Tests
+## Tests
 
 I am using the Unity framework under the MIT License: https://github.com/ThrowTheSwitch/Unity
