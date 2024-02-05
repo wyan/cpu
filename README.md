@@ -131,3 +131,7 @@ Basic immediate addressing.
   Ex  :  _halt, _halt, _halt, _halt, _halt, _halt, _halt, _halt, _halt, _halt, _halt, _halt, _halt, _halt, _halt, _halt,
   Fx  :  _halt, _halt, _halt, _halt, _halt, _halt, _halt, _halt, _halt, _halt, _halt, _halt, _halt, _halt, _halt, _halt
 ```
+
+# Tests
+
+I am using the Unity framework under the MIT License: https://github.com/ThrowTheSwitch/Unity

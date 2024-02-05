@@ -10,13 +10,12 @@
 #define FLAGS_INT      (1u << 15)    //  - we are handling an interrupt
 #define FLAGS_HALT     (1u <<  8)    //  - CPU halted
 #define FLAGS_BRANCH   (1u <<  7)    //  - branch flag: skip next branch if set
-#define FLAGS_CARRY    (1u <<  4)    //  - last operation's carry bit
-#define FLAGS_OVERFLOW (1u <<  3)    //  - last operation overflowed
-#define FLAGS_NEG      (1u <<  2)    //  - last operation's result is < 0
-#define FLAGS_EQ       (1u <<  1)    //  - comparison yielded an equality
-#define FLAGS_ZERO     (1u <<  0)    //  - last operation was zero
+#define FLAGS_CARRY    (1u <<  3)    //  - last operation's carry bit
+#define FLAGS_OVERFLOW (1u <<  2)    //  - last operation overflowed
+#define FLAGS_NEG      (1u <<  1)    //  - last operation's result is < 0
+#define FLAGS_ZERO     (1u <<  0)    //  - last operation was zero / equality
 
-#define FLAGS_COND     (FLAGS_ZERO | FLAGS_EQ | FLAGS_NEG | FLAGS_OVERFLOW | FLAGS_CARRY)
+#define FLAGS_COND     (FLAGS_ZERO | FLAGS_NEG | FLAGS_OVERFLOW | FLAGS_CARRY)
 
 // Opcode mask
 #define OPCODE_MASK    (0xFF00)
@@ -58,12 +57,17 @@ public:
     bool carry() const { return (FLAGS & FLAGS_CARRY); }
     bool zero() const { return (FLAGS & FLAGS_ZERO); }
 
+    uint16_t getPC() const { return PC; }
+
     void loadmem(const uint16_t *buffer, const uint16_t size, const uint16_t start);
+    uint16_t getmem_at(const uint16_t) const;
+
     void dump_memory() const;
     void dump_registers() const;
     void dump_flags() const;
 
     std::string condition_to_letters(uint16_t) const;
+    bool check_condition(uint16_t) const;
 
     void update_flags(uint32_t val);
     void update_flags_arithmetic(uint32_t val, uint16_t op1, uint16_t op2);

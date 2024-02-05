@@ -18,6 +18,10 @@ void CPU::loadmem(const uint16_t *buffer, const uint16_t size, const uint16_t st
     memcpy((MEM + start), buffer, size_norm);
 }
 
+uint16_t CPU::getmem_at(const uint16_t position) const {
+    return MEM[position];
+}
+
 void CPU::dump_memory() const {
     std::cout << std::right << std::setbase(16) << std::noshowbase << std::setfill('0');
     for(int i = 0; i < mem_size; i++) {
@@ -41,7 +45,7 @@ void CPU::dump_registers() const {
 
 void CPU::dump_flags() const {
     std::bitset<16> flag_bitfield(flags());
-    std::cout << "       I......HB..CONEZ" << std::endl;
+    std::cout << "       I......HB...CONE" << std::endl;
     std::cout << "FLAGS: " << flag_bitfield << std::endl;
 }
 
@@ -124,6 +128,60 @@ std::string CPU::condition_to_letters(uint16_t condition) const {
             break;
         default:                // Undefined
             return std::string("UNDEFINED");
+            break;
+    }
+}
+
+bool CPU::check_condition(uint16_t condition) const {
+    // We only compare the relevant 4-bits
+    switch(condition & 0x000F) {
+        case 0b0000:            // No condition
+            return true;
+            break;
+        case 0b0001:            // Equality / zero
+            return (flags() & FLAGS_ZERO);
+            break;
+        case 0b0010:            // Below (unsigned)
+            return (flags() & FLAGS_CARRY);
+            break;
+        case 0b0011:            // Below or equal
+            return (flags() & FLAGS_CARRY) || (flags() & FLAGS_ZERO);
+            break;
+        case 0b0100:            // Less (signed)
+            return (flags() & FLAGS_NEG) != (flags() & FLAGS_OVERFLOW);
+            break;
+        case 0b0101:            // Less or equal
+            return ((flags() & FLAGS_NEG) != (flags() & FLAGS_OVERFLOW)) || (flags() & FLAGS_ZERO);
+            break;
+        case 0b0110:            // Negative
+            return (flags() & FLAGS_NEG);
+            break;
+        case 0b0111:            // Overflow
+            return (flags() & FLAGS_OVERFLOW);
+            break;
+        case 0b1001:            // Not equal
+            return !(flags() & FLAGS_ZERO);
+            break;
+        case 0b1010:            // Above or equal
+            return !(flags() & FLAGS_CARRY);
+            break;
+        case 0b1011:            // Above
+            return !(flags() & FLAGS_CARRY) && !(flags() & FLAGS_ZERO);
+            break;
+        case 0b1100:            // Greater than
+            return ((flags() & FLAGS_NEG) == (flags() & FLAGS_OVERFLOW)) && !(flags() & FLAGS_ZERO);
+            break;
+        case 0b1101:            // Greater or equal
+            return ((flags() & FLAGS_NEG) == (flags() & FLAGS_OVERFLOW)) || (flags() & FLAGS_ZERO);
+            break;
+        case 0b1110:            // Not negative (positive)
+            return !(flags() & FLAGS_NEG);
+            break;
+        case 0b1111:            // Not overflow
+            return !(flags() & FLAGS_OVERFLOW);
+            break;
+        default:                // Undefined
+            return false;
             break;
     }
 }
@@ -333,12 +391,14 @@ void CPU::run_once() {
         int16_t rel = (int16_t)params;
 
         PC += rel;              // JMPR 0 is a nop
+
         std::cout << "JMPR #$" << std::setbase(16) << rel << std::endl;
     }
-    else if(opcode == 0x51)     // JMP abs imm16
+    else if(opcode == 0x51)     // JMP ABS imm16
     {
         uint16_t abs = MEM[PC++];
-        PC = abs;
+        if(check_condition(params))
+            PC = abs;
 
         std::cout << "JMP" << condition_to_letters(params)
                   << " #$" <<  std::setbase(16) << abs << std::endl;
