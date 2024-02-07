@@ -55,6 +55,8 @@ public:
     uint16_t flags() const { return FLAGS; }
     bool halted() const { return (FLAGS & FLAGS_HALT); }
     bool carry() const { return (FLAGS & FLAGS_CARRY); }
+    bool overflow() const { return (FLAGS & FLAGS_OVERFLOW); }
+    bool negative() const { return (FLAGS & FLAGS_NEG); }
     bool zero() const { return (FLAGS & FLAGS_ZERO); }
 
     uint16_t getPC() const { return PC; }

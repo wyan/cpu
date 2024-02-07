@@ -45,7 +45,7 @@ void CPU::dump_registers() const {
 
 void CPU::dump_flags() const {
     std::bitset<16> flag_bitfield(flags());
-    std::cout << "       I......HB...CONE" << std::endl;
+    std::cout << "       I......HB...CVNZ" << std::endl;
     std::cout << "FLAGS: " << flag_bitfield << std::endl;
 }
 
@@ -103,7 +103,7 @@ std::string CPU::condition_to_letters(uint16_t condition) const {
             return std::string(".N");
             break;
         case 0b0111:            // Overflow
-            return std::string(".O");
+            return std::string(".V");
             break;
         case 0b1001:            // Not equal
             return std::string(".NEQ");
@@ -124,7 +124,7 @@ std::string CPU::condition_to_letters(uint16_t condition) const {
             return std::string(".P");
             break;
         case 0b1111:            // Not overflow
-            return std::string(".NO");
+            return std::string(".NV");
             break;
         default:                // Undefined
             return std::string("UNDEFINED");
@@ -139,46 +139,46 @@ bool CPU::check_condition(uint16_t condition) const {
             return true;
             break;
         case 0b0001:            // Equality / zero
-            return (flags() & FLAGS_ZERO);
+            return zero();
             break;
         case 0b0010:            // Below (unsigned)
-            return (flags() & FLAGS_CARRY);
+            return carry();
             break;
         case 0b0011:            // Below or equal
-            return (flags() & FLAGS_CARRY) || (flags() & FLAGS_ZERO);
+            return carry() || zero();
             break;
         case 0b0100:            // Less (signed)
-            return (flags() & FLAGS_NEG) != (flags() & FLAGS_OVERFLOW);
+            return negative() != overflow();
             break;
         case 0b0101:            // Less or equal
-            return ((flags() & FLAGS_NEG) != (flags() & FLAGS_OVERFLOW)) || (flags() & FLAGS_ZERO);
+            return (negative() != overflow()) || zero();
             break;
         case 0b0110:            // Negative
-            return (flags() & FLAGS_NEG);
+            return negative();
             break;
         case 0b0111:            // Overflow
-            return (flags() & FLAGS_OVERFLOW);
+            return overflow();
             break;
         case 0b1001:            // Not equal
-            return !(flags() & FLAGS_ZERO);
+            return !zero();
             break;
         case 0b1010:            // Above or equal
-            return !(flags() & FLAGS_CARRY);
+            return !carry();
             break;
         case 0b1011:            // Above
-            return !(flags() & FLAGS_CARRY) && !(flags() & FLAGS_ZERO);
+            return !carry() && !zero();
             break;
         case 0b1100:            // Greater than
-            return ((flags() & FLAGS_NEG) == (flags() & FLAGS_OVERFLOW)) && !(flags() & FLAGS_ZERO);
+            return (negative() == overflow()) && !zero();
             break;
         case 0b1101:            // Greater or equal
-            return ((flags() & FLAGS_NEG) == (flags() & FLAGS_OVERFLOW)) || (flags() & FLAGS_ZERO);
+            return (negative() == overflow()) || zero();
             break;
         case 0b1110:            // Not negative (positive)
-            return !(flags() & FLAGS_NEG);
+            return !negative();
             break;
         case 0b1111:            // Not overflow
-            return !(flags() & FLAGS_OVERFLOW);
+            return !overflow();
             break;
         default:                // Undefined
             return false;
@@ -198,11 +198,12 @@ void CPU::run_once() {
     uint16_t opcode = (IR & OPCODE_MASK) >> 8;
     uint16_t params = IR & PARAM_MASK;
 
-    std::cout << "Fetched at PC=" << std::right << std::setbase(16) << std::noshowbase << std::setfill('0')
-              << std::setw(4) << initial_pc << " : "              
-              << std::setw(4) << IR << "   "
-              << "opcode=" << std::setw(2) << opcode << "   "
-              << "params=" << std::setw(2) << params << "   ";
+    std::cout << "PC = "
+              << std::right << std::hex << std::setfill('0') << std::uppercase
+              << std::setw(4) << initial_pc << "    "
+              << std::setw(4) << IR << "    ";
+//              << "opcode=" << std::setw(2) << opcode << "   "
+//              << "params=" << std::setw(2) << params << "   ";
 
     // Execute
     // std::cout << "Running : ";
