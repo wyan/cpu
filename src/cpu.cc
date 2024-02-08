@@ -10,6 +10,8 @@ void CPU::reset() {
 
     for(auto &reg : REG) { reg = 0; }    // Zero out registers
 
+    trace_instructions = false;
+
     return;
 }
 
@@ -198,7 +200,7 @@ void CPU::run_once() {
     uint16_t opcode = (IR & OPCODE_MASK) >> 8;
     uint16_t params = IR & PARAM_MASK;
 
-    std::cout << "PC = "
+    if(trace_instructions) std::cout << "PC = "
               << std::right << std::hex << std::setfill('0') << std::uppercase
               << std::setw(4) << initial_pc << "    "
               << std::setw(4) << IR << "    ";
@@ -209,13 +211,13 @@ void CPU::run_once() {
     // std::cout << "Running : ";
     if(opcode == 0xFF)          // NOP
     {
-        std::cout << "NOP" << std::endl;
+        if(trace_instructions) std::cout << "NOP" << std::endl;
     }
     else if(opcode == 0xF8)     // HALT
     {
         halt();
 
-        std::cout << "HALT" << std::endl;
+        if(trace_instructions) std::cout << "HALT" << std::endl;
     }
     else if(opcode == 0x00)     // LOAD indirect  REG[param_high] <- (REG[param_low])
     {
@@ -225,7 +227,7 @@ void CPU::run_once() {
         uint16_t val = REG[reg] = MEM[REG[add]];
         update_flags(val);
 
-        std::cout << std::setbase(10) << "LOAD r" << reg << ", (r" << add << ")" << std::endl;
+        if(trace_instructions) std::cout << std::setbase(10) << "LOAD r" << reg << ", (r" << add << ")" << std::endl;
     }
     else if(opcode == 0x01)     // LOAD immediate REG[param_high] <- imm4[param_low]
     {
@@ -235,7 +237,7 @@ void CPU::run_once() {
         uint16_t val = REG[reg] = imm;
         update_flags(val);
 
-        std::cout << std::setbase(10) << "LOAD r" << reg << ", #" << imm << std::endl;
+        if(trace_instructions) std::cout << std::setbase(10) << "LOAD r" << reg << ", #" << imm << std::endl;
     }
     else if(opcode == 0x02)     // LOAD register REG[param_high] <- REG[param_low]
     {
@@ -245,7 +247,7 @@ void CPU::run_once() {
         uint16_t val = REG[dst] = REG[src];
         update_flags(val);
 
-        std::cout << std::setbase(10) << "LOAD r" << dst << ", r" << src << std::endl;
+        if(trace_instructions) std::cout << std::setbase(10) << "LOAD r" << dst << ", r" << src << std::endl;
     }
     else if(opcode == 0x03)     // LOAD immediate REG[param_high] <- imm16
     {
@@ -255,7 +257,7 @@ void CPU::run_once() {
         uint16_t val = REG[reg] = imm;
         update_flags(val);
 
-        std::cout << std::setbase(10) << "LOAD r" << reg << ", #$" << std::setbase(16) << imm << std::endl;
+        if(trace_instructions) std::cout << std::setbase(10) << "LOAD r" << reg << ", #$" << std::setbase(16) << imm << std::endl;
     }
     else if(opcode == 0x10)     // STORE indirect (REG[param_high]) <- REG[param_low]
     {
@@ -265,7 +267,7 @@ void CPU::run_once() {
         uint16_t val = MEM[REG[add]] = REG[reg];
         update_flags(val);
 
-        std::cout << std::setbase(10) << "STORE (r" << add << "), r" << reg << std::endl;
+        if(trace_instructions) std::cout << std::setbase(10) << "STORE (r" << add << "), r" << reg << std::endl;
     }
     else if(opcode == 0x11)     // STORE indirect (REG[param_high]) <- imm4[param_low]
     {
@@ -275,7 +277,7 @@ void CPU::run_once() {
         uint16_t val = MEM[REG[add]] = imm;
         update_flags(val);
 
-        std::cout << std::setbase(10) << "STORE (r" << add << "), " << imm << std::endl;
+        if(trace_instructions) std::cout << std::setbase(10) << "STORE (r" << add << "), " << imm << std::endl;
     }
     else if(opcode == 0x20)     // ADD REG[param_high] <- REG[param_high] + REG[param_low]
     {
@@ -289,7 +291,7 @@ void CPU::run_once() {
         update_flags(val);
         update_flags_arithmetic(val, op1, op2);
 
-        std::cout << std::setbase(10) << "ADD r" << acc << ", r" << reg << std::endl;
+        if(trace_instructions) std::cout << std::setbase(10) << "ADD r" << acc << ", r" << reg << std::endl;
     }
     else if(opcode == 0x21)     // ADC REG[param_high] <- REG[param_high] + REG[param_low]
     {
@@ -306,7 +308,7 @@ void CPU::run_once() {
         update_flags(val);
         update_flags_arithmetic(val, op1, op2);
 
-        std::cout << std::setbase(10) << "ADD r" << acc << ", r" << reg << std::endl;
+        if(trace_instructions) std::cout << std::setbase(10) << "ADD r" << acc << ", r" << reg << std::endl;
     }
     else if(opcode == 0x30)     // NOT REG[param_low]
     {
@@ -316,7 +318,7 @@ void CPU::run_once() {
 
         update_flags(val);
 
-        std::cout << std::setbase(10) << "NOT r" << reg << std::endl;
+        if(trace_instructions) std::cout << std::setbase(10) << "NOT r" << reg << std::endl;
     }
     else if(opcode == 0x31)     // AND REG[param_high] <- REG[param_low]
     {
@@ -327,7 +329,7 @@ void CPU::run_once() {
 
         update_flags(val);
 
-        std::cout << std::setbase(10) << "AND r" << acc << ", r" << reg << std::endl;
+        if(trace_instructions) std::cout << std::setbase(10) << "AND r" << acc << ", r" << reg << std::endl;
     }
     else if(opcode == 0x32)     // OR REG[param_high] <- REG[param_low]
     {
@@ -338,7 +340,7 @@ void CPU::run_once() {
 
         update_flags(val);
 
-        std::cout << std::setbase(10) << "OR r" << acc << ", r" << reg << std::endl;
+        if(trace_instructions) std::cout << std::setbase(10) << "OR r" << acc << ", r" << reg << std::endl;
     }
     else if(opcode == 0x33)     // XOR REG[param_high] <- REG[param_low]
     {
@@ -349,7 +351,7 @@ void CPU::run_once() {
 
         update_flags(val);
 
-        std::cout << std::setbase(10) << "XOR r" << acc << ", r" << reg << std::endl;
+        if(trace_instructions) std::cout << std::setbase(10) << "XOR r" << acc << ", r" << reg << std::endl;
     }
     else if(opcode == 0x40)     // CMP REG[param_high], REG[param_low]
     {
@@ -361,7 +363,7 @@ void CPU::run_once() {
         update_flags(val);
         update_flags_arithmetic(val, REG[acc], REG[reg]);
 
-        std::cout << std::setbase(10) << "CMP r" << acc << ", r" << reg << std::endl;
+        if(trace_instructions) std::cout << std::setbase(10) << "CMP r" << acc << ", r" << reg << std::endl;
     }
     else if(opcode == 0x41)     // CMP REG[param_high], imm4[param_low]
     {
@@ -373,7 +375,7 @@ void CPU::run_once() {
         update_flags(val);
         update_flags_arithmetic(val, REG[acc], imm);
 
-        std::cout << std::setbase(10) << "CMP r" << acc << ", " << imm << std::endl;
+        if(trace_instructions) std::cout << std::setbase(10) << "CMP r" << acc << ", " << imm << std::endl;
     }
     else if(opcode == 0x42)     // CMP immediate REG[param_high], imm16
     {
@@ -385,7 +387,7 @@ void CPU::run_once() {
         update_flags(val);
         update_flags_arithmetic(val, REG[acc], imm);
 
-        std::cout << std::setbase(10) << "CMP r" << acc << ", #$" << std::setbase(16) << imm << std::endl;
+        if(trace_instructions) std::cout << std::setbase(10) << "CMP r" << acc << ", #$" << std::setbase(16) << imm << std::endl;
     }
     else if(opcode == 0x50)     // JMPR rel [signed param]
     {
@@ -393,7 +395,7 @@ void CPU::run_once() {
 
         PC += rel;              // JMPR 0 is a nop
 
-        std::cout << "JMPR #$" << std::setbase(16) << rel << std::endl;
+        if(trace_instructions) std::cout << "JMPR #$" << std::setbase(16) << rel << std::endl;
     }
     else if(opcode == 0x51)     // JMP ABS imm16
     {
@@ -401,13 +403,14 @@ void CPU::run_once() {
         if(check_condition(params))
             PC = abs;
 
-        std::cout << "JMP" << condition_to_letters(params)
-                  << " #$" <<  std::setbase(16) << abs << std::endl;
+        if(trace_instructions)
+            std::cout << "JMP" << condition_to_letters(params)
+                      << " #$" <<  std::setbase(16) << abs << std::endl;
     }
     else                        // Illegal opcode: halt CPU for now, maybe add trapping later
     {
-        std::cout << "Illegal opcode: CPU halted" << std::endl;
         halt();
+        std::cout << "Illegal opcode: CPU halted" << std::endl;
     }
 
     return;

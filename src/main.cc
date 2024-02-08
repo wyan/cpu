@@ -39,7 +39,6 @@ int main(int argc, char *argv[])
     }
 
     cpu.reset();
-    std::cout << "CPU RESET" << std::endl << std::endl;
 
     while(1) {
         std::string cmd;
@@ -52,9 +51,16 @@ int main(int argc, char *argv[])
             }
         }
 
-        std::regex cmd_pattern("^([a-z!?])\\s?(.*)$");
+        std::regex cmd_pattern("^([a-zA-Z!?])\\s?(.*)$");
         std::smatch m;
 
+        // Parse command: if it starts with "!" run shell command
+        if(cmd[0] == '!') {
+            system(cmd.substr(1).c_str());
+            continue;
+        }
+
+        // Otherwise parse emulator command
         if(std::regex_match(cmd, m, cmd_pattern)) {
             if(m[1] == "q") {
                 return 0;
@@ -107,6 +113,10 @@ int main(int argc, char *argv[])
                 cpu.dump_flags();
                 cpu.dump_registers();
             }
+            else if(m[1] == "t") {
+                cpu.toggle_tracing();
+                std::cout << "Tracing " << (cpu.tracing() ? "on" : "off") << std::endl;
+            }
             else if(m[1] == "x") {
                 std::string arg(m[2]);
                 uint16_t location;
@@ -127,7 +137,10 @@ int main(int argc, char *argv[])
                     std::cout << std::endl;
                 }
             }
-            else if(m[1] == "!") { cpu.reset(); }
+            else if(m[1] == "R") {
+                cpu.reset();
+                std::cout << "CPU reset" << std::endl;
+            }
             else if(m[1] == "?") {
                 std::cout <<
                     "    d [m [v]] - deposit values into memory\n" <<
@@ -137,8 +150,9 @@ int main(int argc, char *argv[])
                     "    p [m]     - deposit the value m into the PC register (0x0100 if not specified) \n" <<
                     "    q         - quit emulator\n" <<
                     "    r         - dump CPU flags and register file\n" <<
+                    "    t         - toggle instruction tracing\n" <<
                     "    x [m]     - examine memory at position m (PC if not specified)\n" <<
-                    "    !         - perform a CPU reset\n" <<
+                    "    R         - perform a CPU reset\n" <<
                     "    ?         - this help\n";
             }
             else { std::cout << "Command not recognised" << std::endl; }

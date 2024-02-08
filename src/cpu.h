@@ -35,6 +35,8 @@ class CPU {
 
     uint16_t IR;          // internal instruction register
 
+    bool trace_instructions;    // CPU displays instructions executed when enabled
+
     void halt() { FLAGS |= FLAGS_HALT; }
 
 public:
@@ -74,6 +76,8 @@ public:
     void update_flags(uint32_t val);
     void update_flags_arithmetic(uint32_t val, uint16_t op1, uint16_t op2);
 
+    void toggle_tracing() { trace_instructions = !trace_instructions; }
+    bool tracing() { return trace_instructions; }
 };
 
 
