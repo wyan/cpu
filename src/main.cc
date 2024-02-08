@@ -113,10 +113,6 @@ int main(int argc, char *argv[])
                 cpu.dump_flags();
                 cpu.dump_registers();
             }
-            else if(m[1] == "t") {
-                cpu.toggle_tracing();
-                std::cout << "Tracing " << (cpu.tracing() ? "on" : "off") << std::endl;
-            }
             else if(m[1] == "x") {
                 std::string arg(m[2]);
                 uint16_t location;
@@ -141,16 +137,20 @@ int main(int argc, char *argv[])
                 cpu.reset();
                 std::cout << "CPU reset" << std::endl;
             }
+            else if(m[1] == "T") {
+                cpu.toggle_tracing();
+                std::cout << "Tracing " << (cpu.tracing() ? "on" : "off") << std::endl;
+            }
             else if(m[1] == "?") {
                 std::cout <<
                     "    d [m [v]] - deposit values into memory\n" <<
                     "    g         - go (run until HALT)\n" <<
-                    "    l f [m]   - load file f in memory position m (0x0100 if not specified)" <<
+                    "    l f [m]   - load file f in memory position m (0x0100 if not specified)\n" <<
                     "    n         - run next instruction\n" <<
                     "    p [m]     - deposit the value m into the PC register (0x0100 if not specified) \n" <<
                     "    q         - quit emulator\n" <<
                     "    r         - dump CPU flags and register file\n" <<
-                    "    t         - toggle instruction tracing\n" <<
+                    "    T         - toggle instruction tracing\n" <<
                     "    x [m]     - examine memory at position m (PC if not specified)\n" <<
                     "    R         - perform a CPU reset\n" <<
                     "    ?         - this help\n";
