@@ -6,58 +6,10 @@
 namespace fs = std::filesystem;
 
 #include "cpu.h"
+#include "tools.h"
 
 #define MEM_SIZE 4096
 
-const uint16_t default_program[] = {
-    0xffff,    // 0100 NOP
-    0x00a3,    // 0101 LOAD r10, (r3)
-    0x0142,    // 0102 LOAD r4, #2
-    0x0350,    // 0103 LOAD r5, #$FF08
-    0xFF08,
-    0x2054,    // 0105 ADD r5, r4
-    0x3004,    // 0106 NOT r4
-    0x3145,    // 0107 AND r4, r5
-    0x3345,    // 0108 XOR r4, r5
-    0x4044,    // 0109 CMP r4, r5
-    0x5002,    // 010A JMPR +2
-    0xffff,    // 010B NOP
-    0xffff,    // 010C NOP
-    0x5100,    // 010D JMP #0x0110
-    0x0110,
-    0xffff,    // 010F NOP      ; skipped by previous jump
-    0x5000,    // 0110 JMPR 0   ; equivalent to a NOP
-    // ...
-    0xf800,    // HALT
-    0xf0ff,    // ;; Invalid instruction, should not get here
-    0x0000
-};
-
-
-// Returns bytes_read if everything went right, 0 if something went wrong
-uint16_t load_file_binary(const std::string filename, uint16_t *buffer, uint16_t buffer_size)
-{
-    std::ifstream file(filename, std::ios::in | std::ios::binary);
-    if(file.fail()) return false;
-
-    uint16_t filesize = fs::file_size(filename);
-    if(filesize > buffer_size) return false;
-
-    file.read((char *)buffer, buffer_size);
-
-    uint16_t bytes_read = file.gcount();
-    if(bytes_read != filesize) return false;
-
-    return bytes_read;
-}
-
-// Returns bytes_read (after conversion) if everything went right, 0 if something went wrong
-uint16_t load_file_text(const std::string filename, uint16_t *buffer, uint16_t buffer_size)
-{
-    std::ifstream file(filename, std::ios::in);
-    if(file.fail()) return false;
-
-}
 
 int main(int argc, char *argv[])
 {
@@ -74,17 +26,16 @@ int main(int argc, char *argv[])
 
         if(argc > 2) location = std::stoi(argv[2], nullptr, 16);
         // load_file_into_memory(cpu, argv[1], location);
-        filesize = load_file_binary(argv[1], buffer, MEM_SIZE);
+        filesize = load_file(argv[1], buffer, MEM_SIZE);
         if(filesize) {
             cpu.loadmem(buffer, filesize, location);
-            std::cout << "Loaded " << argv[1] << "at memory address " << location << std::endl;
+            std::cout << "Loaded " << filesize << " bytes"
+                      << " from " << argv[1] << " at memory address "
+                      << std::hex << std::setw(4) << std::setfill('0') << std::uppercase
+                      << location << std::endl;
         } else {
             std::cout << "Could not load file" << std::endl;
         }
-    }
-    else {
-        cpu.loadmem(default_program, sizeof(default_program), 0x100);
-        std::cout << "Loaded default program at memory address 0x0100" << std::endl;
     }
 
     cpu.reset();
@@ -138,10 +89,11 @@ int main(int argc, char *argv[])
 
                     uint16_t buffer[MEM_SIZE];
                     uint16_t bytes_read;
-                    bytes_read = load_file_binary(filename, buffer, MEM_SIZE);
+                    bytes_read = load_file(filename, buffer, MEM_SIZE);
                     if(bytes_read) {
                         cpu.loadmem(buffer, bytes_read, location);
-                        std::cout << "Loaded " << filename << " at address "
+                        std::cout << "Loaded " << bytes_read << " bytes"
+                                  << " from " << filename << " at memory address "
                                   << std::hex << std::setw(4) << std::setfill('0')
                                   << location << std::endl;
                     } else {
