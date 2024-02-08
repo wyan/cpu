@@ -1,6 +1,10 @@
 #include <iostream>
 #include <fstream>
 #include <regex>
+#include <filesystem>
+
+namespace fs = std::filesystem;
+
 #include "cpu.h"
 
 #define MEM_SIZE 4096
@@ -29,24 +33,30 @@ const uint16_t default_program[] = {
     0x0000
 };
 
-void load_file_into_memory(CPU & cpu, const std::string filename)
+
+// Returns bytes_read if everything went right, 0 if something went wrong
+uint16_t load_file_binary(const std::string filename, uint16_t *buffer, uint16_t buffer_size)
 {
-    uint16_t *buffer = new uint16_t[MEM_SIZE];
+    std::ifstream file(filename, std::ios::in | std::ios::binary);
+    if(file.fail()) return false;
 
-    std::ifstream fin(filename, std::ios::in | std::ios::binary );
-    if(fin.fail()) {
-        std::cout << "Could not read file " << filename << " for input" << std::endl;
-        exit(1);
-    }
-    fin.read((char *)buffer, MEM_SIZE);
-    uint16_t read_bytes = fin.gcount();
+    uint16_t filesize = fs::file_size(filename);
+    if(filesize > buffer_size) return false;
 
-    std::cout << "Read " << read_bytes << " bytes from " << filename << std::endl;
-    cpu.loadmem(buffer, read_bytes, 0);
-    cpu.dump_memory();
+    file.read((char *)buffer, buffer_size);
 
-    fin.close();
-    delete[] buffer;
+    uint16_t bytes_read = file.gcount();
+    if(bytes_read != filesize) return false;
+
+    return bytes_read;
+}
+
+// Returns bytes_read (after conversion) if everything went right, 0 if something went wrong
+uint16_t load_file_text(const std::string filename, uint16_t *buffer, uint16_t buffer_size)
+{
+    std::ifstream file(filename, std::ios::in);
+    if(file.fail()) return false;
+
 }
 
 int main(int argc, char *argv[])
@@ -58,8 +68,19 @@ int main(int argc, char *argv[])
 
     // Passing a parameter with a RAM image to run
     if(argc > 1) {
-        load_file_into_memory(cpu, argv[1]);
-        std::cout << "Loaded " << argv[1] << "at memory address 0x0100" << std::endl;
+        uint16_t buffer[MEM_SIZE];
+        uint16_t location = 0x100;
+        uint16_t filesize;
+
+        if(argc > 2) location = std::stoi(argv[2], nullptr, 16);
+        // load_file_into_memory(cpu, argv[1], location);
+        filesize = load_file_binary(argv[1], buffer, MEM_SIZE);
+        if(filesize) {
+            cpu.loadmem(buffer, filesize, location);
+            std::cout << "Loaded " << argv[1] << "at memory address " << location << std::endl;
+        } else {
+            std::cout << "Could not load file" << std::endl;
+        }
     }
     else {
         cpu.loadmem(default_program, sizeof(default_program), 0x100);
@@ -71,38 +92,104 @@ int main(int argc, char *argv[])
 
     while(1) {
         std::string cmd;
-        std::cout << std::hex << std::uppercase << std::setw(4) << std::setfill('0') << cpu.getPC() << " > ";
-        std::getline(std::cin, cmd);
 
-        std::regex cmd_pattern("^([qxrng?])\\s?(.*)$");
+        std::cout << std::hex << std::uppercase << std::setw(4) << std::setfill('0') << cpu.getPC() << " > ";
+
+        if(!std::getline(std::cin, cmd)) {
+            if (std::cin.eof()) {
+                cmd = "q";
+            }
+        }
+
+        std::regex cmd_pattern("^([a-z!?])\\s?(.*)$");
         std::smatch m;
 
         if(std::regex_match(cmd, m, cmd_pattern)) {
             if(m[1] == "q") {
                 return 0;
             }
-            else if(m[1] == "x") {
-                cpu.dump_registers();
-                cpu.dump_flags();
-            }
-            else if(m[1] == "r") { cpu.reset(); }
-            else if(m[1] == "n") { cpu.run_once(); }
+            else if(m[1] == "d") { std::cout << "Not implemented yet" << std::endl; }
             else if(m[1] == "g") {
                 while(!cpu.halted())
                     cpu.run_once();
             }
+            else if(m[1] == "l") {
+                std::smatch f;
+                std::string args(m[2]);
+                // Match filename (possibly containing escaped spaces)
+                if(std::regex_match(args, f, std::regex("^((?:\\\\[ ]|[^ ])+)(?:\\s+(.*))?$"))) {
+                    std::string filename(f[1]);
+                    std::string loc_str(f[2]);
+                    uint16_t location;
+
+                    if(loc_str.empty()) {
+                        location = 0x100;
+                    } else {
+                        try {
+                            location = std::stoi(loc_str, nullptr, 16);
+                        } catch(std::invalid_argument const &e) {
+                            std::cerr << "Could not parse location: " << loc_str << std::endl;
+                            continue;
+                        } catch (std::out_of_range const &e) {
+                            std::cerr << "Location out of range: " << loc_str << std::endl;
+                            continue;
+                        }
+                    }
+
+                    uint16_t buffer[MEM_SIZE];
+                    uint16_t bytes_read;
+                    bytes_read = load_file_binary(filename, buffer, MEM_SIZE);
+                    if(bytes_read) {
+                        cpu.loadmem(buffer, bytes_read, location);
+                        std::cout << "Loaded " << filename << " at address "
+                                  << std::hex << std::setw(4) << std::setfill('0')
+                                  << location << std::endl;
+                    } else {
+                        std::cout << "Could not read file" << std::endl;
+                    }
+                }
+            }
+            else if(m[1] == "p") { std::cout << "Not implemented yet" << std::endl; }
+            else if(m[1] == "n") { cpu.run_once(); }
+            else if(m[1] == "r") {
+                cpu.dump_flags();
+                cpu.dump_registers();
+            }
+            else if(m[1] == "x") {
+                std::string arg(m[2]);
+                uint16_t location;
+
+                if(arg.empty()) {
+                    location = cpu.getPC();
+                } else {
+                    location = std::stoi(arg, nullptr, 16);
+                }
+
+                location = (location >> 4) << 4; // round to greatest multiple of 16 lower than location
+
+                for(uint16_t i = 0; i < 4; i++) {
+                    std::cout << std::hex << std::setw(4) << std::setfill('0') << (location + 16 * i) << " :  ";
+                    for(uint16_t j = 0; j < 16; j++) {
+                        std::cout << std::setw(4) <<cpu.getmem_at(location + 16 * i + j) << " ";
+                    }
+                    std::cout << std::endl;
+                }
+            }
+            else if(m[1] == "!") { cpu.reset(); }
             else if(m[1] == "?") {
                 std::cout <<
-                    "    q - quit\n" <<
-                    "    x - dump registers & flags\n" <<
-                    "    r - CPU reset\n" <<
-                    "    n - run next instruction\n" <<
-                    "    g - go (run until HALT)\n" <<
-                    "    ? - this help\n";
+                    "    d [m [v]] - deposit values into memory\n" <<
+                    "    g         - go (run until HALT)\n" <<
+                    "    l f [m]   - load file f in memory position m (0x0100 if not specified)" <<
+                    "    n         - run next instruction\n" <<
+                    "    p [m]     - deposit the value m into the PC register (0x0100 if not specified) \n" <<
+                    "    q         - quit emulator\n" <<
+                    "    r         - dump CPU flags and register file\n" <<
+                    "    x [m]     - examine memory at position m (PC if not specified)\n" <<
+                    "    !         - perform a CPU reset\n" <<
+                    "    ?         - this help\n";
             }
-            else {
-                std::cout << "Command not recognised: " << m[1] << std::endl;
-            }
+            else { std::cout << "Command not recognised" << std::endl; }
         }
     }
 
