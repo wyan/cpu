@@ -3,10 +3,12 @@
 
 #include "tools.h"
 
+/* Converts a .cpu file containing a list of hex words to binary */
 int main(int argc, char **argv)
 {
     if(argc != 3) {
         std::cout << "Usage: cpu2bin input.cpu output.bin" << std::endl;
+        return 1;
     }
 
     std::string input_filename(argv[1]);
