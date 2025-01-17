@@ -107,7 +107,25 @@ int main(int argc, char *argv[])
                     }
                 }
             }
-            else if(m[1] == "p") { std::cout << "Not implemented yet" << std::endl; }
+            else if(m[1] == "p") {
+                const std::string loc_str(m[2]);
+                uint16_t location;
+
+                if(loc_str.empty()) {
+                    location = 0x100;
+                } else {
+                    try {
+                        location = std::stoi(loc_str, nullptr, 16);
+                    } catch(std::invalid_argument const &e) {
+                        std::cerr << "Could not parse location: " << loc_str << std::endl;
+                        continue;
+                    } catch (std::out_of_range const &e) {
+                        std::cerr << "Location out of range: " << loc_str << std::endl;
+                        continue;
+                    }
+                }
+                cpu.setPC(location);
+            }
             else if(m[1] == "n") { cpu.run_once(); }
             else if(m[1] == "r") {
                 cpu.dump_flags();

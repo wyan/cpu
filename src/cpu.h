@@ -62,6 +62,7 @@ public:
     bool zero() const { return (FLAGS & FLAGS_ZERO); }
 
     uint16_t getPC() const { return PC; }
+    void setPC(const uint16_t location) { PC = location; }
 
     void loadmem(const uint16_t *buffer, const uint16_t size, const uint16_t start);
     uint16_t getmem_at(const uint16_t) const;
